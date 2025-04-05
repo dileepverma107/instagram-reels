@@ -25,7 +25,7 @@ function createSidebar() {
   // Create toggle button
   const toggleButton = document.createElement('button');
   toggleButton.id = 'instagram-sidebar-toggle';
-  toggleButton.innerHTML = '&lt;&lt;';
+  toggleButton.textContent = '<<';
   toggleButton.title = 'Toggle Instagram Sidebar';
   
   // Add click event to toggle sidebar
@@ -33,10 +33,10 @@ function createSidebar() {
     const sidebar = document.getElementById('instagram-sidebar');
     if (sidebar.classList.contains('collapsed')) {
       sidebar.classList.remove('collapsed');
-      toggleButton.innerHTML = '&lt;&lt;';
+      toggleButton.textContent = '<<';
     } else {
       sidebar.classList.add('collapsed');
-      toggleButton.innerHTML = '&gt;&gt;';
+      toggleButton.textContent = '>>';
     }
   });
   

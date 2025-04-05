@@ -1,0 +1,123 @@
+body, html {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  background-color: #000;
+}
+
+.instagram-container {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.header {
+  background-color: #000;
+  color: white;
+  padding: 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #262626;
+}
+
+.header-title {
+  font-weight: 600;
+  font-size: 16px;
+}
+
+.reels-container {
+  flex: 1;
+  overflow: hidden;
+  position: relative;
+}
+
+.reel {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.5s ease-out;
+}
+
+.reel-content {
+  flex: 1;
+  overflow: hidden;
+  position: relative;
+  background-color: #000;
+}
+
+.reel-video {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.reel-info {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 10px;
+  color: white;
+  background: linear-gradient(transparent, rgba(0, 0, 0, 0.8));
+}
+
+.reel-username {
+  font-weight: 600;
+  margin-bottom: 5px;
+}
+
+.reel-caption {
+  font-size: 14px;
+  margin-bottom: 10px;
+}
+
+.reel-actions {
+  display: flex;
+  flex-direction: column;
+  position: absolute;
+  right: 10px;
+  bottom: 80px;
+}
+
+.action-button {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 24px;
+  margin: 10px 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  cursor: pointer;
+}
+
+.action-count {
+  font-size: 12px;
+  margin-top: 2px;
+}
+
+.loading {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: white;
+  text-align: center;
+}
+
+#debug-info {
+  position: fixed;
+  bottom: 10px;
+  left: 10px;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 10px;
+  max-width: 80%;
+  z-index: 999;
+} 

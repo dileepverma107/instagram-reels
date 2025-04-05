@@ -14,7 +14,10 @@
     "run_at": "document_idle"
   }],
   "web_accessible_resources": [{
-    "resources": ["sidebar.html", "sample_videos/*"],
+    "resources": ["sidebar.html", "sample_videos/*", "sidebar.js", "sidebar.css", "popup.css"],
     "matches": ["<all_urls>"]
-  }]
+  }],
+  "content_security_policy": {
+    "extension_pages": "script-src 'self' 'unsafe-inline'; object-src 'self'"
+  }
 } 

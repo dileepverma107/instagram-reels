@@ -1,15 +1,13 @@
+/* Styles for the Instagram sidebar */
 #instagram-sidebar {
   position: fixed;
   top: 0;
   right: 0;
   width: 360px;
   height: 100vh;
-  z-index: 2147483647;
-  background-color: #fff;
-  box-shadow: -2px 0 5px rgba(0, 0, 0, 0.2);
+  z-index: 9999;
   transition: transform 0.3s ease;
-  border: none;
-  overflow: hidden;
+  box-shadow: -2px 0 5px rgba(0, 0, 0, 0.1);
 }
 
 #instagram-sidebar.collapsed {
@@ -21,20 +19,15 @@
   top: 50%;
   right: 360px;
   transform: translateY(-50%);
-  z-index: 2147483647;
-  background-color: #405DE6;
+  z-index: 10000;
+  background: #405DE6;
   color: white;
   border: none;
-  width: 24px;
-  height: 40px;
   border-radius: 4px 0 0 4px;
+  padding: 10px 5px;
   cursor: pointer;
-  font-weight: bold;
-  transition: right 0.3s ease;
-  padding: 0;
-  text-align: center;
   font-size: 14px;
-  line-height: 40px;
+  transition: right 0.3s ease;
 }
 
 #instagram-sidebar.collapsed + #instagram-sidebar-toggle {
