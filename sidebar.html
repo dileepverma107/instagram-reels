@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Instagram Reels Sidebar</title>
+  <style>
+    body, html {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: #000;
+    }
+    
+    .instagram-container {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .header {
+      background-color: #000;
+      color: white;
+      padding: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid #262626;
+    }
+    
+    .header-title {
+      font-weight: 600;
+      font-size: 16px;
+    }
+    
+    .refresh-button {
+      background: none;
+      border: none;
+      color: white;
+      font-size: 18px;
+      cursor: pointer;
+    }
+    
+    .reels-container {
+      flex: 1;
+      overflow: hidden;
+      position: relative;
+    }
+    
+    .reel {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      transition: transform 0.5s ease-out;
+    }
+    
+    .reel-content {
+      flex: 1;
+      overflow: hidden;
+      position: relative;
+      background-color: #000;
+    }
+    
+    .reel-video {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+    
+    .video-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-size: cover;
+      background-position: center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .play-button {
+      width: 70px;
+      height: 70px;
+      border-radius: 50%;
+      background-color: rgba(0, 0, 0, 0.7);
+      border: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 36px;
+      cursor: pointer;
+    }
+    
+    .reel-info {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      padding: 10px;
+      color: white;
+      background: linear-gradient(transparent, rgba(0, 0, 0, 0.8));
+    }
+    
+    .reel-username {
+      font-weight: 600;
+      margin-bottom: 5px;
+    }
+    
+    .reel-caption {
+      font-size: 14px;
+      margin-bottom: 10px;
+    }
+    
+    .reel-actions {
+      display: flex;
+      flex-direction: column;
+      position: absolute;
+      right: 10px;
+      bottom: 80px;
+    }
+    
+    .action-button {
+      background: none;
+      border: none;
+      color: white;
+      font-size: 24px;
+      margin: 10px 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      cursor: pointer;
+    }
+    
+    .action-count {
+      font-size: 12px;
+      margin-top: 2px;
+    }
+    
+    .loading {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      color: white;
+      text-align: center;
+    }
+    
+    .error-message {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      color: white;
+      text-align: center;
+      max-width: 80%;
+    }
+    
+    .retry-button {
+      background-color: #405DE6;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 4px;
+      margin-top: 10px;
+      cursor: pointer;
+    }
+    
+    .progress-container {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background-color: rgba(255, 255, 255, 0.3);
+    }
+    
+    .progress-bar {
+      height: 100%;
+      background-color: #405DE6;
+      width: 0%;
+      transition: width 0.1s linear;
+    }
+    
+    .debug-info {
+      position: absolute;
+      bottom: 10px;
+      left: 10px;
+      color: white;
+      font-size: 10px;
+      background-color: rgba(0, 0, 0, 0.5);
+      padding: 5px;
+      z-index: 9999;
+      max-width: 80%;
+      overflow: hidden;
+    }
+  </style>
+</head>
+<body>
+  <div class="instagram-container">
+    <div class="header">
+      <div class="header-title">Instagram Reels</div>
+      <button class="refresh-button" id="refreshButton">🔄</button>
+    </div>
+    <div class="reels-container" id="reelsContainer">
+      <div class="loading" id="loading">
+        Loading reels...
+      </div>
+    </div>
+    <div id="debugInfo" class="debug-info"></div>
+  </div>
+
+  <script>
+    // Debug logging helper
+    const debugInfo = document.getElementById('debugInfo');
+    function debugLog(message) {
+      console.log(message);
+      if (debugInfo) {
+        const timestamp = new Date().toLocaleTimeString();
+        debugInfo.innerHTML += `[${timestamp}] ${message}<br>`;
+        debugInfo.scrollTop = debugInfo.scrollHeight;
+      }
+    }
+
+    const reelsContainer = document.getElementById('reelsContainer');
+    const loading = document.getElementById('loading');
+    const refreshButton = document.getElementById('refreshButton');
+    let currentReelIndex = 0;
+    let reelElements = [];
+    let autoScrollEnabled = true;
+    
+    // Use backup reels data when API fetch fails
+    function useBackupReelsData() {
+      debugLog("Using backup reels data");
+      return [
+        {
+          id: 1,
+          username: 'instagram_official',
+          caption: 'Check out our latest features! #instagram #reels',
+          videoUrl: 'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4',
+          thumbnailUrl: 'https://interactive-examples.mdn.mozilla.net/media/cc0-images/grapefruit-slice-332-332.jpg',
+          likes: 28456,
+          comments: 1823
+        },
+        {
+          id: 2,
+          username: 'travel_enthusiast',
+          caption: 'Exploring beautiful destinations around the world! #travel #adventure',
+          videoUrl: 'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4',
+          thumbnailUrl: 'https://interactive-examples.mdn.mozilla.net/media/cc0-images/grapefruit-slice-332-332.jpg',
+          likes: 15678,
+          comments: 942
+        },
+        {
+          id: 3,
+          username: 'food_lover',
+          caption: 'Delicious recipes you need to try today! #foodie #cooking',
+          videoUrl: 'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4',
+          thumbnailUrl: 'https://interactive-examples.mdn.mozilla.net/media/cc0-images/grapefruit-slice-332-332.jpg',
+          likes: 21345,
+          comments: 1156
+        },
+        {
+          id: 4,
+          username: 'fitness_coach',
+          caption: 'Quick and effective workout routine for busy people #fitness #health',
+          videoUrl: 'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4',
+          thumbnailUrl: 'https://interactive-examples.mdn.mozilla.net/media/cc0-images/grapefruit-slice-332-332.jpg',
+          likes: 18976,
+          comments: 834
+        },
+        {
+          id: 5,
+          username: 'tech_reviewer',
+          caption: 'First look at the latest smartphone release! #tech #gadgets',
+          videoUrl: 'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4',
+          thumbnailUrl: 'https://interactive-examples.mdn.mozilla.net/media/cc0-images/grapefruit-slice-332-332.jpg',
+          likes: 12567,
+          comments: 723
+        }
+      ];
+    }
+
+    // Fetch Instagram reels data from the background script or directly
+    async function fetchReels() {
+      debugLog("Starting to fetch reels data");
+      
+      try {
+        // Try to use the background script
+        if (typeof chrome !== 'undefined' && chrome.runtime) {
+          debugLog("Attempting to use background script");
+          
+          try {
+            return new Promise((resolve, reject) => {
+              chrome.runtime.sendMessage({ action: 'fetchInstagramData' }, response => {
+                if (response && response.success && response.data && response.data.length > 0) {
+                  debugLog(`Received ${response.data.length} reels from background`);
+                  resolve(response.data);
+                } else {
+                  debugLog(`Background script error: ${response?.error || 'No data returned'}`);
+                  resolve(useBackupReelsData());
+                }
+              });
+              
+              // Set a timeout in case the background script doesn't respond
+              setTimeout(() => {
+                debugLog("Background script timeout, using backup data");
+                resolve(useBackupReelsData());
+              }, 3000);
+            });
+          } catch (chromeError) {
+            debugLog(`Chrome runtime error: ${chromeError.message}`);
+            return useBackupReelsData();
+          }
+        } else {
+          debugLog("Chrome runtime not available, using backup data directly");
+          return useBackupReelsData();
+        }
+      } catch (error) {
+        debugLog(`Error fetching Instagram reels: ${error.message}`);
+        return useBackupReelsData();
+      }
+    }
+
+    // Clear existing reels
+    function clearReels() {
+      reelElements.forEach(reel => reel.remove());
+      reelElements = [];
+      currentReelIndex = 0;
+    }
+
+    // Load reels after fetching data
+    async function loadReels() {
+      try {
+        // Show loading indicator
+        loading.style.display = 'block';
+        debugLog("Loading reels started");
+        
+        // Fetch reels data - always use backup data for now
+        let reelsData;
+        try {
+          reelsData = await fetchReels();
+        } catch (fetchError) {
+          debugLog(`Fetch error: ${fetchError.message}`);
+          reelsData = useBackupReelsData();
+        }
+        
+        if (!reelsData || reelsData.length === 0) {
+          debugLog("No reels available, using backup data");
+          reelsData = useBackupReelsData();
+        }
+        
+        debugLog(`Loaded ${reelsData.length} reels`);
+        
+        // Clear any existing reels
+        clearReels();
+        
+        // Hide loading indicator
+        loading.style.display = 'none';
+        
+        reelsData.forEach((reel, index) => {
+          debugLog(`Creating reel ${index + 1}: ${reel.username}`);
+          
+          const reelElement = document.createElement('div');
+          reelElement.className = 'reel';
+          reelElement.style.transform = `translateY(${index === 0 ? '0' : '100%'})`;
+          
+          // Create progress container and bar
+          const progressContainer = document.createElement('div');
+          progressContainer.className = 'progress-container';
+          
+          const progressBar = document.createElement('div');
+          progressBar.className = 'progress-bar';
+          progressContainer.appendChild(progressBar);
+          
+          // Create video overlay with thumbnail
+          const videoOverlay = document.createElement('div');
+          videoOverlay.className = 'video-overlay';
+          if (reel.thumbnailUrl) {
+            videoOverlay.style.backgroundImage = `url(${reel.thumbnailUrl})`;
+          }
+          
+          const playButton = document.createElement('button');
+          playButton.className = 'play-button';
+          playButton.innerHTML = '▶';
+          videoOverlay.appendChild(playButton);
+          
+          // Create the rest of the reel content
+          reelElement.innerHTML = `
+            <div class="reel-content">
+              <video class="reel-video" src="${reel.videoUrl}" loop playsinline></video>
+              <div class="reel-info">
+                <div class="reel-username">@${reel.username}</div>
+                <div class="reel-caption">${reel.caption}</div>
+              </div>
+            </div>
+            <div class="reel-actions">
+              <button class="action-button">
+                ❤️
+                <span class="action-count">${reel.likes}</span>
+              </button>
+              <button class="action-button">
+                💬
+                <span class="action-count">${reel.comments}</span>
+              </button>
+              <button class="action-button">
+                📤
+              </button>
+            </div>
+          `;
+          
+          // Add progress container to reel
+          const reelContent = reelElement.querySelector('.reel-content');
+          reelContent.insertBefore(progressContainer, reelContent.firstChild);
+          
+          // Add video overlay to reel
+          const video = reelElement.querySelector('.reel-video');
+          reelContent.insertBefore(videoOverlay, video.nextSibling);
+          
+          reelsContainer.appendChild(reelElement);
+          reelElements.push(reelElement);
+          
+          // Set up video events
+          const playVideoHandler = () => {
+            debugLog(`Playing video for reel ${index + 1}`);
+            videoOverlay.style.display = 'none';
+            video.play().catch(error => {
+              debugLog(`Failed to play video: ${error.message}`);
+              videoOverlay.style.display = 'flex';
+            });
+          };
+          
+          // Play first video automatically if it's the first one
+          if (index === 0) {
+            setTimeout(() => {
+              playVideoHandler();
+            }, 500);
+          }
+          
+          // Play button click event
+          playButton.addEventListener('click', playVideoHandler);
+          
+          // Video progress event
+          video.addEventListener('timeupdate', () => {
+            const percent = (video.currentTime / video.duration) * 100;
+            progressBar.style.width = `${percent}%`;
+          });
+          
+          // Add error handling for videos
+          video.addEventListener('error', () => {
+            debugLog(`Video failed to load: ${reel.videoUrl}`);
+            videoOverlay.style.display = 'flex';
+            
+            // Try to reload or skip to the next reel if autoScroll is enabled
+            if (autoScrollEnabled && index === currentReelIndex) {
+              scrollToNextReel();
+            }
+          });
+          
+          // Video ended event
+          video.addEventListener('ended', () => {
+            if (autoScrollEnabled) {
+              scrollToNextReel();
+            } else {
+              // If auto-scroll is disabled, just loop the current video
+              video.currentTime = 0;
+              video.play().catch(error => {
+                debugLog(`Failed to play video: ${error.message}`);
+                videoOverlay.style.display = 'flex';
+              });
+            }
+          });
+        });
+        
+        debugLog("All reels loaded successfully");
+      } catch (error) {
+        debugLog(`Error loading reels: ${error.message}`);
+        loading.style.display = 'none';
+        
+        // Show error message
+        const errorElement = document.createElement('div');
+        errorElement.className = 'error-message';
+        errorElement.innerHTML = `
+          <p>Failed to load Instagram reels. Please try again later.</p>
+          <button class="retry-button" id="retryButton">Retry</button>
+        `;
+        reelsContainer.appendChild(errorElement);
+        
+        document.getElementById('retryButton').addEventListener('click', () => {
+          // Remove error message
+          errorElement.remove();
+          
+          // Show loading message again
+          loading.style.display = 'block';
+          
+          // Try to load reels again
+          loadReels();
+        });
+      }
+    }
+
+    // Scroll to the next reel
+    function scrollToNextReel() {
+      if (currentReelIndex < reelElements.length - 1) {
+        debugLog(`Scrolling from reel ${currentReelIndex + 1} to ${currentReelIndex + 2}`);
+        
+        // Hide the video overlay for the next reel
+        const nextVideoOverlay = reelElements[currentReelIndex + 1].querySelector('.video-overlay');
+        if (nextVideoOverlay) {
+          nextVideoOverlay.style.display = 'none';
+        }
+        
+        // Pause current video
+        const currentVideo = reelElements[currentReelIndex].querySelector('video');
+        currentVideo.pause();
+        
+        currentReelIndex++;
+        
+        // Update position of all reel elements
+        reelElements.forEach((reel, index) => {
+          const offset = index - currentReelIndex;
+          reel.style.transform = `translateY(${offset * 100}%)`;
+        });
+        
+        // Play the next video
+        const nextVideo = reelElements[currentReelIndex].querySelector('video');
+        nextVideo.currentTime = 0;
+        nextVideo.play().catch(error => {
+          debugLog(`Failed to play video: ${error.message}`);
+          
+          // Show the video overlay if playback fails
+          const nextVideoOverlay = reelElements[currentReelIndex].querySelector('.video-overlay');
+          if (nextVideoOverlay) {
+            nextVideoOverlay.style.display = 'flex';
+          }
+          
+          // If video fails to play, try to move to next reel
+          if (autoScrollEnabled) {
+            setTimeout(() => scrollToNextReel(), 1000);
+          }
+        });
+      } else {
+        // If at the last reel, loop back to the first one
+        debugLog("Reached last reel, looping back to first reel");
+        currentReelIndex = -1;  // Will be incremented to 0 in the next call
+        scrollToNextReel();
+      }
+    }
+
+    // Add periodic auto-scrolling (if enabled)
+    function setupPeriodicScrolling() {
+      // Check if user has been idle on the current reel for too long
+      setInterval(() => {
+        if (autoScrollEnabled && reelElements.length > 0) {
+          const currentVideo = reelElements[currentReelIndex]?.querySelector('video');
+          
+          if (currentVideo) {
+            // If the video has been playing for more than 60 seconds, move to next reel
+            if (currentVideo.currentTime > 60) {
+              debugLog("Auto-scrolling after 60 seconds of video playing");
+              scrollToNextReel();
+            }
+          }
+        }
+      }, 5000); // Check every 5 seconds
+    }
+
+    // Refresh reels data
+    refreshButton.addEventListener('click', () => {
+      debugLog("Manual refresh requested");
+      loadReels();
+    });
+
+    // Listen for messages from the parent window (content.js)
+    window.addEventListener('message', (event) => {
+      if (event.data.action === 'toggleAutoScroll') {
+        autoScrollEnabled = event.data.isEnabled;
+        debugLog(`Auto-scroll ${autoScrollEnabled ? 'enabled' : 'disabled'}`);
+        
+        // If auto-scroll is re-enabled and current video is at the end, scroll to next reel
+        if (autoScrollEnabled && reelElements.length > 0) {
+          const currentVideo = reelElements[currentReelIndex]?.querySelector('video');
+          if (currentVideo && currentVideo.currentTime >= currentVideo.duration - 0.5) {
+            scrollToNextReel();
+          }
+        }
+      }
+    });
+
+    // Initialize
+    document.addEventListener('DOMContentLoaded', () => {
+      debugLog("DOM content loaded, initializing sidebar");
+      loadReels();
+      setupPeriodicScrolling();
+      
+      // Add swipe up/down gestures for manual navigation
+      let touchStartY = 0;
+      
+      reelsContainer.addEventListener('touchstart', (e) => {
+        touchStartY = e.touches[0].clientY;
+      });
+      
+      reelsContainer.addEventListener('touchend', (e) => {
+        const touchEndY = e.changedTouches[0].clientY;
+        const diff = touchStartY - touchEndY;
+        
+        if (Math.abs(diff) > 50) {  // Minimum swipe distance
+          if (diff > 0) {
+            // Swipe up - go to next reel
+            scrollToNextReel();
+          } else {
+            // Swipe down - go to previous reel
+            if (currentReelIndex > 0) {
+              // Pause current video
+              const currentVideo = reelElements[currentReelIndex].querySelector('video');
+              currentVideo.pause();
+              
+              currentReelIndex--;
+              
+              // Update position of all reel elements
+              reelElements.forEach((reel, index) => {
+                const offset = index - currentReelIndex;
+                reel.style.transform = `translateY(${offset * 100}%)`;
+              });
+              
+              // Hide the video overlay for the previous reel
+              const prevVideoOverlay = reelElements[currentReelIndex].querySelector('.video-overlay');
+              if (prevVideoOverlay) {
+                prevVideoOverlay.style.display = 'none';
+              }
+              
+              // Play the previous video
+              const prevVideo = reelElements[currentReelIndex].querySelector('video');
+              prevVideo.currentTime = 0;
+              prevVideo.play().catch(error => {
+                debugLog(`Failed to play video: ${error.message}`);
+                
+                // Show the video overlay if playback fails
+                const prevVideoOverlay = reelElements[currentReelIndex].querySelector('.video-overlay');
+                if (prevVideoOverlay) {
+                  prevVideoOverlay.style.display = 'flex';
+                }
+              });
+            }
+          }
+        }
+      });
+      
+      // Add keyboard shortcuts for navigation
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'ArrowDown' || e.key === 'j') {
+          scrollToNextReel();
+        } else if (e.key === 'ArrowUp' || e.key === 'k') {
+          // Go to previous reel
+          if (currentReelIndex > 0) {
+            // Pause current video
+            const currentVideo = reelElements[currentReelIndex].querySelector('video');
+            currentVideo.pause();
+            
+            currentReelIndex--;
+            
+            // Update position of all reel elements
+            reelElements.forEach((reel, index) => {
+              const offset = index - currentReelIndex;
+              reel.style.transform = `translateY(${offset * 100}%)`;
+            });
+            
+            // Hide the video overlay for the previous reel
+            const prevVideoOverlay = reelElements[currentReelIndex].querySelector('.video-overlay');
+            if (prevVideoOverlay) {
+              prevVideoOverlay.style.display = 'none';
+            }
+            
+            // Play the previous video
+            const prevVideo = reelElements[currentReelIndex].querySelector('video');
+            prevVideo.currentTime = 0;
+            prevVideo.play().catch(error => {
+              debugLog(`Failed to play video: ${error.message}`);
+              
+              // Show the video overlay if playback fails
+              const prevVideoOverlay = reelElements[currentReelIndex].querySelector('.video-overlay');
+              if (prevVideoOverlay) {
+                prevVideoOverlay.style.display = 'flex';
+              }
+            });
+          }
+        }
+      });
+    });
+
+    // Initialize immediately in case DOMContentLoaded already fired
+    if (document.readyState === 'loading') {
+      debugLog("Document still loading, waiting for DOMContentLoaded");
+    } else {
+      debugLog("Document already loaded, initializing immediately");
+      loadReels();
+      setupPeriodicScrolling();
+    }
+  </script>
+</body>
+</html> 

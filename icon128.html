@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Instagram Sidebar Icon 128x128</title>
+</head>
+<body>
+  <h1>Instagram Sidebar Icon 128x128</h1>
+  <p>Right-click on the icon below and select "Save image as..." to save as icon128.png in the images folder:</p>
+  
+  <img id="icon" width="128" height="128" style="border: 1px solid #ccc; padding: 10px; image-rendering: pixelated;">
+  
+  <script>
+    function generateIcon(size) {
+      const canvas = document.createElement('canvas');
+      canvas.width = size;
+      canvas.height = size;
+      const ctx = canvas.getContext('2d');
+      
+      // Instagram gradient background
+      const gradient = ctx.createLinearGradient(0, 0, size, size);
+      gradient.addColorStop(0, '#fa7e1e');   // Yellow/Orange
+      gradient.addColorStop(0.3, '#d62976'); // Pink
+      gradient.addColorStop(0.6, '#962fbf'); // Purple
+      gradient.addColorStop(1, '#4f5bd5');   // Blue
+      
+      ctx.fillStyle = gradient;
+      ctx.fillRect(0, 0, size, size);
+      
+      // Draw a white rectangle in center
+      const innerSize = Math.floor(size * 0.6);
+      const offset = Math.floor((size - innerSize) / 2);
+      ctx.fillStyle = 'white';
+      ctx.fillRect(offset, offset, innerSize, innerSize);
+      
+      // Draw small play button icon in the center
+      const triangleSize = Math.floor(size * 0.3);
+      const triangleOffset = Math.floor((size - triangleSize) / 2);
+      
+      ctx.beginPath();
+      ctx.moveTo(triangleOffset + triangleSize, size / 2);
+      ctx.lineTo(triangleOffset, size / 2 - triangleSize / 2);
+      ctx.lineTo(triangleOffset, size / 2 + triangleSize / 2);
+      ctx.closePath();
+      
+      ctx.fillStyle = '#405DE6';
+      ctx.fill();
+      
+      // Draw border
+      ctx.strokeStyle = 'rgba(0, 0, 0, 0.1)';
+      ctx.lineWidth = Math.max(1, Math.floor(size / 64));
+      ctx.strokeRect(0, 0, size, size);
+      
+      return canvas.toDataURL('image/png');
+    }
+
+    window.onload = function() {
+      const iconDataUrl = generateIcon(128);
+      document.getElementById('icon').src = iconDataUrl;
+    };
+  </script>
+</body>
+</html> 

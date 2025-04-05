@@ -1,0 +1,41 @@
+{
+  "manifest_version": 3,
+  "name": "Instagram Sidebar Plugin",
+  "version": "1.0",
+  "description": "Displays Instagram reels on the right side of the browser with auto-scrolling",
+  "permissions": ["activeTab", "storage", "scripting"],
+  "host_permissions": [
+    "*://*.instagram.com/*",
+    "https://www.instagram.com/*",
+    "https://i.instagram.com/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "images/icon16.png",
+      "48": "images/icon48.png",
+      "128": "images/icon128.png"
+    }
+  },
+  "content_scripts": [{
+    "matches": ["<all_urls>"],
+    "js": ["content.js"],
+    "css": ["styles.css"],
+    "run_at": "document_idle"
+  }],
+  "web_accessible_resources": [{
+    "resources": ["sidebar.html", "images/*"],
+    "matches": ["<all_urls>"]
+  }],
+  "icons": {
+    "16": "images/icon16.png",
+    "48": "images/icon48.png",
+    "128": "images/icon128.png"
+  },
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'self'; connect-src 'self' https://*.instagram.com https://www.instagram.com https://i.instagram.com https://*.mdn.mozilla.net"
+  }
+} 

@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Instagram Sidebar Icon</title>
+  <style>
+    body { 
+      margin: 0; 
+      padding: 0;
+      width: 128px;
+      height: 128px;
+      background: linear-gradient(45deg, #fa7e1e, #d62976, #962fbf, #4f5bd5);
+    }
+    canvas {
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="icon" width="128" height="128"></canvas>
+  <script>
+    const canvas = document.getElementById('icon');
+    const ctx = canvas.getContext('2d');
+    
+    // Instagram gradient background
+    const gradient = ctx.createLinearGradient(0, 0, 128, 128);
+    gradient.addColorStop(0, '#fa7e1e');   // Yellow/Orange
+    gradient.addColorStop(0.3, '#d62976'); // Pink
+    gradient.addColorStop(0.6, '#962fbf'); // Purple
+    gradient.addColorStop(1, '#4f5bd5');   // Blue
+    
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, 128, 128);
+    
+    // Draw a white square for the center
+    ctx.fillStyle = 'white';
+    ctx.fillRect(32, 32, 64, 64);
+    
+    // Draw black border
+    ctx.strokeStyle = 'black';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(0, 0, 128, 128);
+    
+    // Convert to PNG
+    const pngDataUrl = canvas.toDataURL('image/png');
+    console.log(pngDataUrl);
+  </script>
+</body>
+</html> 
